@@ -521,6 +521,7 @@
       "editTextBlock": "Edit Text Block",
       "columns": {
         "nr": "Nr.",
+        "identifier": "Nr.",
         "title": "Title / Text",
         "type": "Type",
         "genre": "Genre",
