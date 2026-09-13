@@ -19,9 +19,10 @@ public class CreateEnsembleVoice {
     String label;
 
     /**
-     * Relative importance of this voice in coverage scoring.
+     * Relative importance of this voice in coverage scoring. Optional — defaults to {@code 1.0}
+     * when not given (the UI's weight field has no required validator).
      */
-    double weight;
+    Double weight;
 
     /**
      * Whether this voice must be covered for the ensemble to be considered playable.
