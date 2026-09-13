@@ -1,0 +1,89 @@
+# syntax=docker/dockerfile:1
+
+# Builds the SAM backend (Quarkus REST API, module "server") into the
+# de.halbmann/sam:latest image using only Docker — no Maven, no JDK and no
+# mvnw/mvnw.cmd on the host. This replaces the Jib-based path documented in
+# .claude/skills/docker-build/SKILL.md ("./mvnw package
+# -Dquarkus.container-image.build=true -pl server -am"), which drives Maven
+# from the host JVM instead of a container build.
+#
+# Build from the repository root (this file is not the default "Dockerfile",
+# so -f is required):
+#
+#   docker build -f Dockerfile.sam -t de.halbmann/sam:latest .
+#
+# docker-compose.prod.yml's sam-server service has a matching "build:"
+# section, so "docker compose -f docker-compose.prod.yml build sam-server"
+# (or "up --build") also works.
+
+########################
+# 1) Build stage
+########################
+# The project pins Java 25 (maven.compiler.release in pom.xml) and Quarkus
+# 3.39.x. eclipse-temurin/maven images already publish a matching JDK 25
+# build, so no separate JDK install step is needed here.
+FROM maven:3-eclipse-temurin-25 AS build
+WORKDIR /build
+
+# "server" is one module in a multi-module reactor (pom.xml -> api, storage,
+# core, server, ui, cli, migration). Maven needs a pom.xml for every module
+# listed in the root pom to resolve the reactor graph, even for modules
+# "server" doesn't depend on (ui, cli, migration) — but only the modules
+# "server" actually depends on (api, core, storage/*) need their real
+# sources copied in.
+COPY pom.xml ./
+COPY ui/pom.xml ui/pom.xml
+COPY cli/pom.xml cli/pom.xml
+COPY migration/pom.xml migration/pom.xml
+COPY api api
+COPY core core
+COPY storage storage
+COPY server server
+
+# -pl server -am: build "server" plus the reactor modules it depends on
+# (api, core, storage-sdk, storage-local, storage-s3) — mirrors the
+# docker-build skill's Jib invocation, minus the Jib/container-image step.
+# Tests are skipped here: they rely on Testcontainers (Postgres, Keycloak)
+# which needs a Docker socket that isn't available during `docker build`;
+# run "./mvnw verify -pl server -am -DskipITs=false" separately in CI/dev.
+RUN --mount=type=cache,target=/root/.m2/repository \
+    mvn -B -pl server -am package -DskipTests
+
+# Quarkus's default "fast-jar" packaging produces this layout under
+# server/target/quarkus-app/ — same layout server/src/main/docker/Dockerfile.jvm
+# expects, just assembled inside the image instead of on the host.
+
+########################
+# 2) Runtime stage
+########################
+FROM eclipse-temurin:25-jre AS runtime
+
+# JAVA_OPTS: extra flags at container-run time (e.g. "-Xmx512m"), appended to
+# the fixed ones below — no rebuild needed to tune memory per environment.
+ENV LANGUAGE='en_US:en' \
+    JAVA_OPTS=""
+
+WORKDIR /deployments
+
+# quarkus-app/ split into four layers (lib, main jar, app classes, quarkus
+# internals) so that library-only changes reuse cached layers on rebuilds.
+COPY --from=build /build/server/target/quarkus-app/lib/ ./lib/
+COPY --from=build /build/server/target/quarkus-app/*.jar ./
+COPY --from=build /build/server/target/quarkus-app/app/ ./app/
+COPY --from=build /build/server/target/quarkus-app/quarkus/ ./quarkus/
+
+# Run as an unprivileged, fixed UID (no /etc/passwd entry needed for the JVM
+# to run — only used for file ownership here) and pre-create the upload
+# directory so a fresh named volume mounted at /data/sam (see
+# docker-compose.prod.yml: SAM_FILESYSTEM_BASE_PATH) inherits the right owner.
+RUN mkdir -p /data/sam && chown -R 185:185 /deployments /data/sam
+USER 185
+
+# 8080: REST API + Angular-facing endpoints (proxied by sam-ui/nginx).
+# 9000: management interface — /q/metrics (Prometheus), /q/info.
+EXPOSE 8080 9000
+
+# Shell form (not exec-array) so $JAVA_OPTS expands; "exec" hands PID 1 to
+# the JVM so `docker stop` / `docker compose down` deliver SIGTERM to it
+# directly instead of to a lingering shell, giving Quarkus a clean shutdown.
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -jar /deployments/quarkus-run.jar"]

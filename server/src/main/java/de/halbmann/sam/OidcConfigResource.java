@@ -12,7 +12,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @PermitAll
 public class OidcConfigResource {
 
-    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
+    // Not auth-server-url: that's where *we* reach Keycloak (may be an
+    // internal/plain-HTTP address); this is what the *browser* must use,
+    // e.g. a TLS-terminating reverse proxy in front of Keycloak.
+    @ConfigProperty(name = "quarkus.oidc.token.issuer")
     Optional<String> issuerUrl;
 
     @ConfigProperty(name = "quarkus.oidc.client-id", defaultValue = "sam-ui")

@@ -10,3 +10,24 @@
 ui/src/main/webui/node_modules
 ui/src/main/webui/dist
 ui/src/main/webui/.angular
+
+# Backend image (Dockerfile.sam at repo root) needs the Maven reactor: full
+# sources for the modules "server" depends on (api, core, storage/*), plus a
+# bare pom.xml for every other module so Maven can still resolve the full
+# reactor graph declared in the root pom.xml.
+!pom.xml
+!api
+!core
+!storage
+!server
+!ui/pom.xml
+!cli/pom.xml
+!migration/pom.xml
+# Local build output for those modules — always rebuilt inside the image.
+api/target
+core/target
+storage/target
+storage/storage-sdk/target
+storage/storage-local/target
+storage/storage-s3/target
+server/target
