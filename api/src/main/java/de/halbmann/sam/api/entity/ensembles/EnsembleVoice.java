@@ -29,9 +29,10 @@ public class EnsembleVoice {
 
     /**
      * Relative importance of this voice in the overall coverage score. Higher weight means this
-     * voice contributes more to the final score.
+     * voice contributes more to the final score. Optional on update — defaults to {@code 1.0}
+     * when not given (the UI's weight field has no required validator).
      */
-    double weight;
+    Double weight;
 
     /**
      * Whether this voice is mandatory. If a required voice has no matching instrumentation, the
