@@ -61,3 +61,8 @@ drifts and becomes a maintenance burden, that's the signal to drop
 `--import-realm` from the `keycloak` service entirely and make `configure`
 (run once after every fresh `docker compose up`) the only bootstrap path —
 at that point `sam-realm.json` can be deleted.
+
+For example, the `sam-ui` client's `redirectUris`/`webOrigins` needed a LAN
+IP's `http://` and `https://` origins added in both files to support the
+all-in-one, TLS-terminated compose stack — see
+[ADR-0010](../docs/architecture/decisions/adr-0010-tls-proxy-for-embedded-keycloak.md).

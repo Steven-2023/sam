@@ -7,13 +7,19 @@ services:
       dockerfile: Dockerfile
     image: de.halbmann/sam-ui:latest
     ports:
-      - "80:80"
+      - "81:80"
+      - "8443:443"
+    volumes:
+      - ./.certs:/etc/nginx/certs:ro
     depends_on:
       - sam-server
     restart: unless-stopped
 
   # Quarkus backend: REST API + OIDC config endpoint
   sam-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.sam
     image: de.halbmann/sam:latest
     environment:
       # Database
