@@ -9,6 +9,7 @@ import de.halbmann.sam.api.entity.shared.PaginationRequest;
 import de.halbmann.sam.api.entity.shared.SearchResultMetrics;
 import de.halbmann.sam.api.entity.sheets.CreateSheetMusic;
 import de.halbmann.sam.api.entity.sheets.ExploreShelves;
+import de.halbmann.sam.api.entity.sheets.Genre;
 import de.halbmann.sam.api.entity.sheets.SheetFilterRequest;
 import de.halbmann.sam.api.entity.sheets.SheetMusic;
 import de.halbmann.sam.api.entity.sheets.SheetMusicSearchResult;
@@ -86,7 +87,9 @@ public class SheetService {
                 parameters.put("composer.name", filterRequest.getComposer());
             }
             if (filterRequest.getGenre() != null) {
-                parameters.put("genre", filterRequest.getGenre());
+                // genre is a basic-valued enum column (SheetMusicEntity.genre) — Hibernate
+                // requires the bound parameter to actually be a Genre, not its raw String name.
+                parameters.put("genre", Genre.valueOf(filterRequest.getGenre()));
             }
             if (filterRequest.getFavorite() != null) {
                 parameters.put("favorite", filterRequest.getFavorite());
