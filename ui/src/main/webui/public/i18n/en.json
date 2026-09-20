@@ -270,7 +270,12 @@
       "save": "Save",
       "cancel": "Cancel",
       "documents": {
-        "empty": "No attachments yet"
+        "empty": "No attachments yet",
+        "editAnnotationsTooltip": "Edit annotations (bowings, articulation)",
+        "editAnnotations": "Edit annotations",
+        "saveAnnotations": "Save",
+        "cancelAnnotations": "Cancel",
+        "annotationsSaved": "Annotations saved"
       },
       "batch": {
         "selectAll": "Select all",

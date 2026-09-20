@@ -297,6 +297,28 @@ panels, no coverage, no batch actions — just the essentials readable at arm's 
 
 ---
 
+### PDF annotation editor (bowings, articulations) — `done`
+
+An "Edit annotations" button on PDF part attachments opens the file in an in-browser
+editor for drawing bowings (strings) and articulations (winds) directly onto the pages.
+
+**Done:** `ngx-extended-pdf-viewer` (wrapping pdf.js's own ink-annotation tool) for
+freehand drawing + export; saving writes real, printable PDF Ink annotation objects (not
+a SAM-only overlay) via `POST /documents/{attachmentId}/content`, a new backend
+capability that swaps an attachment's underlying document while keeping its identity
+(id/displayName/type/list position) — see [Documents & Attachments](../features/documents.md#pdf-annotation-editor).
+Annotations are shared (one agreed markup per voice), not a private per-musician layer.
+
+**Deliberately not built yet:** saving currently requires `music_librarian`/`admin`,
+matching every other document-mutating endpoint. Letting any ensemble member with access
+to a voice annotate it directly (the more natural fit for "a string player enters their
+own bowings") needs a new, narrower permission — out of scope for this first pass.
+
+**Stakeholders:** S3 (Musiker), S2 (Dirigent), S1 (music librarian)
+**Effort:** Medium
+
+---
+
 ### Part distribution list — `idea`
 
 Before a rehearsal, the music librarian generates a list: for each instrumentation of a

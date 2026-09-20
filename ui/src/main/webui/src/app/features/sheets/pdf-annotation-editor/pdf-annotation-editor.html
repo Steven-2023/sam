@@ -1,0 +1,48 @@
+<p-dialog
+  data-testid="dialog-pdf-annotation-editor"
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="attachment()?.displayName ?? ('sheets.instrumentations.documents.editAnnotations' | translate)"
+  [modal]="true"
+  [style]="{ width: 'min(1400px, 96vw)', height: '92vh' }"
+  [contentStyle]="{ padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: '1' }"
+  [breakpoints]="{ '900px': '99vw' }"
+  [draggable]="false"
+>
+  <div class="flex-1 min-h-0 relative">
+    @if (loading()) {
+      <div class="absolute inset-0 flex items-center justify-center text-[2rem] text-[var(--sam-text-muted)]">
+        <i class="pi pi-spinner pi-spin"></i>
+      </div>
+    } @else if (pdfSrc()) {
+      <ngx-extended-pdf-viewer
+        [src]="pdfSrc()!"
+        [showDrawEditor]="true"
+        [showHighlightEditor]="false"
+        [showStampEditor]="false"
+        [showSignatureEditor]="false"
+        [showCommentEditor]="false"
+        [textLayer]="false"
+        height="100%"
+      />
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button
+      data-testid="btn-cancel-annotation-editor"
+      [label]="'sheets.instrumentations.documents.cancelAnnotations' | translate"
+      severity="secondary"
+      [text]="true"
+      [disabled]="saving()"
+      (onClick)="close()"
+    />
+    <p-button
+      data-testid="btn-save-annotations"
+      [label]="'sheets.instrumentations.documents.saveAnnotations' | translate"
+      [loading]="saving()"
+      [disabled]="loading() || !pdfSrc()"
+      (onClick)="save()"
+    />
+  </ng-template>
+</p-dialog>

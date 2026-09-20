@@ -13,6 +13,9 @@ import de.halbmann.sam.core.exception.EntityNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @ApplicationScoped
@@ -166,6 +169,33 @@ public class AttachmentLinkService {
                 // Intentionally no deleteIfUnlinked: document stays in the uploads pool
             }
         }
+    }
+
+    /**
+     * Replaces the file content behind an existing attachment (e.g. after annotating a PDF) —
+     * keeps the attachment's identity (id, displayName, type, position in its sheet's/
+     * instrumentation's list) but points it at a newly stored document. The previous document is
+     * cleaned up if no other attachment still references it, matching {@link #deleteAttachment}.
+     */
+    public Attachment replaceContent(String attachmentId, String filename, InputStream inputStream)
+            throws IOException, NoSuchAlgorithmException {
+        AttachmentEntity attachment = attachmentRepository
+                .findByIdOptional(UUID.fromString(attachmentId))
+                .orElseThrow(() -> new EntityNotFoundException("Attachment", UUID.fromString(attachmentId)));
+
+        DocumentEntity oldDocument = attachment.getDocument();
+        DocumentEntity newDocument = documentStore.save(filename, inputStream);
+
+        attachment.setDocument(newDocument);
+        documentRepository.incrementRefCount(newDocument);
+        attachmentRepository.persistAndFlush(attachment);
+
+        if (oldDocument != null && !oldDocument.getId().equals(newDocument.getId())) {
+            documentRepository.decrementRefCount(oldDocument);
+            documentStore.deleteIfUnlinked(oldDocument);
+        }
+
+        return attachmentMapper.toDto(attachment);
     }
 
     public void deleteAttachment(String attachmentId) {

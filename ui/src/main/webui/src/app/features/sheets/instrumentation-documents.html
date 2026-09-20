@@ -35,6 +35,17 @@
               tooltipPosition="top"
               (onClick)="downloadAttachment(doc)"
             />
+            @if (isPdf(doc)) {
+              <p-button
+                icon="pi pi-file-edit"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                [pTooltip]="'sheets.instrumentations.documents.editAnnotationsTooltip' | translate"
+                tooltipPosition="top"
+                (onClick)="openAnnotationEditor(doc)"
+              />
+            }
             <p-button
               icon="pi pi-pencil"
               [rounded]="true"
@@ -83,3 +94,11 @@
     </div>
   </div>
 }
+
+<app-pdf-annotation-editor
+  [visible]="annotationEditorVisible()"
+  (visibleChange)="annotationEditorVisible.set($event)"
+  [basePath]="getDocumentBasePath()"
+  [attachment]="annotationEditorAttachment()"
+  (saved)="onAnnotationsSaved()"
+/>

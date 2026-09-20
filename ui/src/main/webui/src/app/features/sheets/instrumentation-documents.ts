@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, Output, EventEmitter, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, Output, EventEmitter, SimpleChanges, signal } from '@angular/core';
 import { Button } from '@openng/optimus-ui/button';
 import { Tooltip } from '@openng/optimus-ui/tooltip';
 import { Checkbox } from '@openng/optimus-ui/checkbox';
@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { DocumentHandler } from '../../shared/base/document-handler';
 import { Attachment, Instrumentation } from '../../model/datamodels';
+import { PdfAnnotationEditor } from './pdf-annotation-editor/pdf-annotation-editor';
 
 export interface DocToggleEvent {
   instrId: string;
@@ -20,7 +21,7 @@ export interface DocsLoadedEvent {
 
 @Component({
   selector: 'app-instrumentation-documents',
-  imports: [Button, Tooltip, Checkbox, FormsModule, TranslatePipe],
+  imports: [Button, Tooltip, Checkbox, FormsModule, TranslatePipe, PdfAnnotationEditor],
   templateUrl: './instrumentation-documents.html',
   styleUrl: './instrumentation-documents.scss',
 })
@@ -62,6 +63,22 @@ export class InstrumentationDocuments extends DocumentHandler implements OnChang
         this.documentsLoading.set(false);
       },
     });
+  }
+
+  protected readonly annotationEditorVisible = signal(false);
+  protected readonly annotationEditorAttachment = signal<Attachment | null>(null);
+
+  protected isPdf(doc: Attachment): boolean {
+    return doc.mimeType === 'application/pdf';
+  }
+
+  protected openAnnotationEditor(doc: Attachment): void {
+    this.annotationEditorAttachment.set(doc);
+    this.annotationEditorVisible.set(true);
+  }
+
+  protected onAnnotationsSaved(): void {
+    this.loadDocuments();
   }
 
   protected isSelected(doc: Attachment): boolean {

@@ -74,6 +74,16 @@ export class DocumentsApiService {
   }
 
   /**
+   * Replaces an attachment's file content (e.g. after annotating a PDF) while keeping its
+   * identity — id, displayName, type stay the same, only the underlying document changes.
+   */
+  replaceContent(attachmentId: string, file: File | Blob, filename = 'annotated.pdf'): Observable<Attachment> {
+    const formData = new FormData();
+    formData.append('file', file, filename);
+    return this.http.post<Attachment>(`${this.forTopLevel()}/${attachmentId}/content`, formData);
+  }
+
+  /**
    * Link an existing (unlinked) document to a sheet and optionally an instrumentation.
    * Expects: POST /api/documents/{documentId}/link  { sheetId, instrumentationId?, type? }
    */
