@@ -106,6 +106,23 @@ public interface DocumentsResource {
     Attachment linkDocument(@PathParam("docIdentifier") String docIdentifier, DocumentLinkRequest documentLink);
 
     /**
+     * Replaces an attachment's file content (e.g. after annotating a PDF with bowings or
+     * articulations) while keeping the attachment's identity — id, displayName, type, and its
+     * position in the owning sheet's/instrumentation's attachment list all stay the same, only
+     * the underlying document changes. The previous document is cleaned up if no other
+     * attachment still references it.
+     *
+     * @param docIdentifier the attachment whose content is being replaced
+     * @param request       the multipart form data containing the new file
+     * @return the updated attachment
+     */
+    @POST
+    @Path("{docIdentifier}/content")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    Attachment replaceContent(@PathParam("docIdentifier") String docIdentifier, @BeanParam FileUploadRequest request);
+
+    /**
      * Run AI-based classification on the stored document.
      * Returns detected metadata and pre-matched entity references.
      * Only applicable to documents with MIME type {@code application/pdf} or image types.

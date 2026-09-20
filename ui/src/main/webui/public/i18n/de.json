@@ -270,7 +270,12 @@
       "save": "Speichern",
       "cancel": "Abbrechen",
       "documents": {
-        "empty": "Noch keine Anhänge vorhanden"
+        "empty": "Noch keine Anhänge vorhanden",
+        "editAnnotationsTooltip": "Anmerkungen bearbeiten (Striche, Artikulation)",
+        "editAnnotations": "Anmerkungen bearbeiten",
+        "saveAnnotations": "Speichern",
+        "cancelAnnotations": "Abbrechen",
+        "annotationsSaved": "Anmerkungen gespeichert"
       },
       "batch": {
         "selectAll": "Alle auswählen",

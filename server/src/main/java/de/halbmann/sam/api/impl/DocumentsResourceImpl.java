@@ -271,6 +271,22 @@ public class DocumentsResourceImpl implements DocumentsResource {
 
     @Override
     @RolesAllowed({Roles.MUSIC_LIBRARIAN, Roles.ADMIN})
+    public Attachment replaceContent(String docIdentifier, FileUploadRequest request) {
+        try (InputStream inputStream = Files.newInputStream(request.getFile().uploadedFile())) {
+            Attachment attachment = attachmentLinkService.replaceContent(
+                    docIdentifier, request.getFile().fileName(), inputStream);
+            log.atLevel(Level.INFO)
+                    .log(() -> "Attachment content replaced - filename: "
+                            + request.getFile().fileName() + " (" + attachment.getId() + ")");
+            return attachment;
+        } catch (IOException | NoSuchAlgorithmException e) {
+            log.atWarn().setCause(e).log(() -> "Failed to replace attachment content " + docIdentifier);
+            throw new InternalServerErrorException("Failed to save file", e);
+        }
+    }
+
+    @Override
+    @RolesAllowed({Roles.MUSIC_LIBRARIAN, Roles.ADMIN})
     public Attachment linkDocument(String docIdentifier, DocumentLinkRequest documentLink) {
         return attachmentLinkService.linkDocument(UUID.fromString(docIdentifier), documentLink);
     }
