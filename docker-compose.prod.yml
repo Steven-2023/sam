@@ -28,7 +28,10 @@ services:
       DB_PASS: ${DB_PASS:?DB_PASS is required}
       # OIDC / Keycloak (token validation + oidc-config.json endpoint)
       OIDC_SERVER_URL: ${OIDC_SERVER_URL:?OIDC_SERVER_URL is required}
-      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?OIDC_ISSUER_URL is required}
+      # Only needed when the browser can't reach Keycloak at OIDC_SERVER_URL, e.g. a
+      # TLS-terminating reverse proxy in front of a plain-HTTP Keycloak (ADR-0010) — falls
+      # back to OIDC_SERVER_URL when the two coincide, the common case for this compose file.
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-${OIDC_SERVER_URL}}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-sam-ui}
       # Keycloak admin client (used for user search in musician linking)
       KEYCLOAK_ADMIN_URL: ${KEYCLOAK_ADMIN_URL:?KEYCLOAK_ADMIN_URL is required}

@@ -62,6 +62,13 @@ that's necessary (browsers require a secure context for the PKCE
 `crypto.subtle` call) and how it's wired (`KC_HOSTNAME`,
 `KC_HOSTNAME_BACKCHANNEL_DYNAMIC`, `OIDC_ISSUER_URL`).
 
+The same TLS-termination/reverse-proxy setup is baked into
+`docker-compose.prod.yml`'s `sam-ui` service too (same `nginx.conf`, same
+`81:80`/`8443:443` ports and `.certs/` mount) — it's equally relevant there
+whenever Keycloak is self-hosted on a LAN without a real domain/CA cert
+(e.g. via `docker-compose.keycloak.yml`, run separately). `OIDC_ISSUER_URL`
+only needs setting in that case; it defaults to `OIDC_SERVER_URL` otherwise.
+
 ## Related
 
 - [Security](concepts/security.md) — OIDC / Keycloak setup
