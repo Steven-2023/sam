@@ -7,6 +7,16 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # Angular 22 needs TS 6.0, Optimus UI 2.x and OIDC client 22 together: upgrade manually as one set.
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-patch:
         patterns: ["*"]
@@ -22,6 +32,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # Tika 4 is a breaking API change (see MimeTypeDetector): migrate deliberately.
+      - dependency-name: "org.apache.tika:*"
+        update-types: ["version-update:semver-major"]
     groups:
       maven-minor-patch:
         patterns: ["*"]

@@ -1,4 +1,13 @@
-import { Component, Input, OnChanges, Output, EventEmitter, SimpleChanges, signal } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  Output,
+  EventEmitter,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  signal,
+} from '@angular/core';
 import { Button } from '@openng/optimus-ui/button';
 import { Tooltip } from '@openng/optimus-ui/tooltip';
 import { Checkbox } from '@openng/optimus-ui/checkbox';
@@ -23,6 +32,7 @@ export interface DocsLoadedEvent {
   selector: 'app-instrumentation-documents',
   imports: [Button, Tooltip, Checkbox, FormsModule, TranslatePipe, PdfAnnotationEditor],
   templateUrl: './instrumentation-documents.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './instrumentation-documents.scss',
 })
 export class InstrumentationDocuments extends DocumentHandler implements OnChanges {
