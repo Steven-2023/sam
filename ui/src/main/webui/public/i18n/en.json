@@ -275,7 +275,18 @@
         "editAnnotations": "Edit annotations",
         "saveAnnotations": "Save",
         "cancelAnnotations": "Cancel",
-        "annotationsSaved": "Annotations saved"
+        "annotationsSaved": "Annotations saved",
+        "symbols": {
+          "articulationGroup": "Articulation",
+          "stringGroup": "Strings",
+          "staccato": "Staccato",
+          "accent": "Accent",
+          "tenuto": "Tenuto",
+          "marcato": "Marcato",
+          "downBow": "Down-bow",
+          "upBow": "Up-bow",
+          "placeHint": "Click on the note to place the symbol"
+        }
       },
       "batch": {
         "selectAll": "Select all",

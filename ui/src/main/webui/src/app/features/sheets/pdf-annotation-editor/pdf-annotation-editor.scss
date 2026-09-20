@@ -1,0 +1,56 @@
+// Symbol SVGs are hardcoded black (the placed stamp must always be black ink
+// on the page, regardless of app theme) — so the armed/hover states are shown
+// via the button chrome (background/border), not by recoloring the icon.
+.symbol-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.3rem;
+  border-radius: var(--p-border-radius);
+  border: 1px solid transparent;
+  background: white;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--p-primary-color);
+  }
+
+  &.symbol-btn-armed {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 2px var(--p-primary-color);
+  }
+
+  ::ng-deep svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Ghost copy of the armed symbol, following the pointer over the PDF so the user can see exactly
+// where and how large it will land before clicking — mirrors forScore's stamp-placement UX.
+// Sized to roughly match the real placed stamp (~2.5% of a typical page width); pointer-events
+// none so it never intercepts the click meant for the page underneath.
+.symbol-cursor-preview {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 5;
+
+  ::ng-deep svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// pdf.js's floating per-annotation toolbar (shown while a placed stamp is selected) always offers
+// "Alternativtext" and "Kommentar" buttons alongside delete — neither is relevant to our curated
+// symbol set (there's no config option to disable just these two, see PdfAltTextDialogComponent /
+// PdfCommentEditorComponent), so hide them and keep only the delete button for removing a
+// misplaced mark.
+::ng-deep .editToolbar button.altText,
+::ng-deep .editToolbar button.comment {
+  display: none !important;
+}
