@@ -6,15 +6,11 @@
   "directAccessGrantsEnabled": true,
   "redirectUris": [
     "http://localhost:4200/*",
-    "http://localhost:8080/*",
-    "http://192.168.101.103:81/*",
-    "https://192.168.101.103:8443/*"
+    "http://localhost:8080/*"
   ],
   "webOrigins": [
     "http://localhost:4200",
-    "http://localhost:8080",
-    "http://192.168.101.103:81",
-    "https://192.168.101.103:8443"
+    "http://localhost:8080"
   ],
   "protocolMappers": [
     {
