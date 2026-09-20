@@ -9,7 +9,63 @@
   [breakpoints]="{ '900px': '99vw' }"
   [draggable]="false"
 >
-  <div class="flex-1 min-h-0 relative">
+  @if (pdfSrc()) {
+    <div class="flex items-center gap-4 px-3 py-2 border-b border-[var(--sam-border)] flex-wrap" data-testid="annotation-symbol-toolbar">
+      <div class="flex items-center gap-1">
+        <span class="text-[0.75rem] text-[var(--sam-text-muted)] mr-1">{{ 'sheets.instrumentations.documents.symbols.articulationGroup' | translate }}</span>
+        @for (symbol of articulationSymbols; track symbol.id) {
+          <button
+            type="button"
+            class="symbol-btn"
+            [class.symbol-btn-armed]="isArmed(symbol)"
+            [attr.data-testid]="'symbol-btn-' + symbol.id"
+            [pTooltip]="symbol.labelKey | translate"
+            tooltipPosition="top"
+            (click)="armSymbol(symbol)"
+            [innerHTML]="symbol.safeSvg"
+          ></button>
+        }
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="text-[0.75rem] text-[var(--sam-text-muted)] mr-1">{{ 'sheets.instrumentations.documents.symbols.stringGroup' | translate }}</span>
+        @for (symbol of stringSymbols; track symbol.id) {
+          <button
+            type="button"
+            class="symbol-btn"
+            [class.symbol-btn-armed]="isArmed(symbol)"
+            [attr.data-testid]="'symbol-btn-' + symbol.id"
+            [pTooltip]="symbol.labelKey | translate"
+            tooltipPosition="top"
+            (click)="armSymbol(symbol)"
+            [innerHTML]="symbol.safeSvg"
+          ></button>
+        }
+      </div>
+      @if (armedSymbolId()) {
+        <span class="text-[0.8rem] text-[var(--p-primary-color)]">{{ 'sheets.instrumentations.documents.symbols.placeHint' | translate }}</span>
+      }
+    </div>
+  }
+
+  <div
+    class="flex-1 min-h-0 relative"
+    [class.cursor-crosshair]="armedSymbolId()"
+    (click)="onViewerClick($event)"
+    (mousemove)="onViewerMouseMove($event)"
+    (mouseleave)="onViewerMouseLeave()"
+  >
+    @if (armedSymbol(); as symbol) {
+      @if (cursorPreview(); as pos) {
+        <div
+          class="symbol-cursor-preview"
+          [style.left.px]="pos.x"
+          [style.top.px]="pos.y"
+          [style.width.px]="pos.sizePx"
+          [style.height.px]="pos.sizePx"
+          [innerHTML]="symbol.safeSvg"
+        ></div>
+      }
+    }
     @if (loading()) {
       <div class="absolute inset-0 flex items-center justify-center text-[2rem] text-[var(--sam-text-muted)]">
         <i class="pi pi-spinner pi-spin"></i>
@@ -24,6 +80,7 @@
         [showCommentEditor]="false"
         [textLayer]="false"
         height="100%"
+        (annotationEditorLayerRendered)="onEditorLayerRendered($event)"
       />
     }
   </div>
