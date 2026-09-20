@@ -61,3 +61,11 @@ drifts and becomes a maintenance burden, that's the signal to drop
 `--import-realm` from the `keycloak` service entirely and make `configure`
 (run once after every fresh `docker compose up`) the only bootstrap path —
 at that point `sam-realm.json` can be deleted.
+
+For example, when running the TLS-terminated LAN/testing stack (ADR-0010
+below), the `sam-ui` client's `redirectUris`/`webOrigins` need your
+deployment's LAN IP added, in both `http://<lan-ip>:81/*` and
+`https://<lan-ip>:8443/*` form, to **both** `sam-realm.json` and
+`configurator/sam/clients/sam-ui.json` — not committed here since it's
+specific to each deployment's network. See
+[ADR-0010](../docs/architecture/decisions/adr-0010-tls-proxy-for-embedded-keycloak.md).

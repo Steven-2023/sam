@@ -1,14 +1,131 @@
 services:
 
+  # nginx reverse proxy: serves Angular SPA and proxies /api/* + /oidc-config.json to sam-server
+  sam-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: de.halbmann/sam-ui:latest
+    ports:
+      - "81:80"
+      - "8443:443"
+    volumes:
+      - ./.certs:/etc/nginx/certs:ro
+    depends_on:
+      - sam-server
+    restart: unless-stopped
+
+  # Quarkus backend: REST API + OIDC config endpoint
+  sam-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.sam
+    image: de.halbmann/sam:latest
+    environment:
+      # Database
+      DB_URL: jdbc:postgresql://database:5432/sam_music
+      DB_USER: ${DB_USER:-sam}
+      DB_PASS: ${DB_PASS:?DB_PASS is required}
+      # OIDC / Keycloak (token validation + oidc-config.json endpoint)
+      OIDC_SERVER_URL: ${OIDC_SERVER_URL:?OIDC_SERVER_URL is required}
+      # Public issuer URL the *browser* uses (must match keycloak's KC_HOSTNAME
+      # below) — kept separate from OIDC_SERVER_URL so the backend can keep
+      # talking to Keycloak over plain HTTP internally while the browser is
+      # required to see the TLS front door (crypto.subtle / mixed content).
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?OIDC_ISSUER_URL is required}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-sam-ui}
+      # Keycloak admin client (used for user search in musician linking)
+      KEYCLOAK_ADMIN_URL: ${KEYCLOAK_ADMIN_URL:?KEYCLOAK_ADMIN_URL is required}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-sam}
+      KEYCLOAK_BACKEND_CLIENT_ID: ${KEYCLOAK_BACKEND_CLIENT_ID:-sam-backend}
+      KEYCLOAK_BACKEND_CLIENT_SECRET: ${KEYCLOAK_BACKEND_CLIENT_SECRET:?KEYCLOAK_BACKEND_CLIENT_SECRET is required}
+      # AI — OpenAI for document classification
+      QUARKUS_LANGCHAIN4J_OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      # Storage: local filesystem path inside the container
+      SAM_FILESYSTEM_BASE_PATH: /data/sam
+    volumes:
+      - sam-data:/data/sam
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
   database:
     image: postgres:17
     environment:
-      POSTGRES_USER: sam
-      POSTGRES_PASSWORD: s4mP@ssword
+      POSTGRES_USER: ${DB_USER:-sam}
+      POSTGRES_PASSWORD: ${DB_PASS:?DB_PASS is required}
       POSTGRES_DB: sam_music
-    #  PGDATA: /data/postgres
-    #volumes:
-    #  - postgres:/data/postgres
-    ports:
-      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sam} -d sam_music"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+
+  # Dev/embedded Keycloak — see docker-compose.keycloak.yml (source of this
+  # service; kept there too for standalone use without the rest of the stack).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      # Public base URL Keycloak stamps into issuer/token/login-page links —
+      # must equal the sam-ui TLS origin (nginx proxies /realms|/resources|/js
+      # to this service) so browser calls stay same-origin-HTTPS. Keep this
+      # host:port in sync with OIDC_ISSUER_URL in .env.
+      KC_HOSTNAME: https://192.168.101.103:8443
+      # Without this, jwks_uri/token_endpoint in the discovery document also
+      # use the fixed KC_HOSTNAME above — sam-server would then have to fetch
+      # them over HTTPS and fail (self-signed cert, untrusted by the JVM).
+      # Dynamic backchannel: those "backend" endpoints are instead derived
+      # from whatever host:port the *caller* used, so sam-server (calling via
+      # plain http://.../:8180, see OIDC_SERVER_URL) gets back plain-HTTP
+      # URLs, while the browser (via the :8443 front door) still gets HTTPS.
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # Trust nginx's X-Forwarded-Proto/Host so the dynamic backchannel above
+      # (and KC_HOSTNAME's https scheme) resolve correctly — otherwise
+      # Keycloak only sees the plain-HTTP hop from nginx to this container.
+      KC_PROXY_HEADERS: xforwarded
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    ports:
+      - "8180:8080"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'exec 3<>/dev/tcp/127.0.0.1/9000; echo -e ''GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n'' >&3; grep -q ''"status": "UP"'' <&3'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Re-applies keycloak/configurator/sam/**/*.json to the running instance above
+  # (does not run by default; unlike --import-realm this is idempotent/repeatable):
+  #   docker compose --profile configure run --rm keycloak-configurator
+  keycloak-configurator:
+    image: ghcr.io/cycrilabs/keycloak-configurator:latest
+    profiles: ["configure"]
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/configurator:/config
+    command:
+      - configure
+      - -s
+      - http://keycloak:8080
+      - -u
+      - admin
+      - -p
+      - admin
+      - -c
+      - /config
+
+volumes:
+  postgres-data:
+  sam-data:

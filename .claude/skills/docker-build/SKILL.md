@@ -20,6 +20,22 @@ Push to a registry (append registry/group overrides as needed):
   -pl server -am
 ```
 
+### Backend image (Docker-only alternative — `Dockerfile.sam`)
+
+For a host with no Maven/JDK installed, `Dockerfile.sam` (repo root) builds the
+same `de.halbmann/sam:latest` image with a containerized Maven build instead of
+driving Maven from the host JVM:
+
+```bash
+docker build -f Dockerfile.sam -t de.halbmann/sam:latest .
+```
+
+`docker-compose.prod.yml`'s `sam-server` service has a matching `build:`
+section, so `docker compose -f docker-compose.prod.yml build sam-server` (or
+`up --build`) also works. Tests are skipped in this build (no Docker socket
+available during `docker build` for Testcontainers) — run
+`./mvnw verify -pl server -am -DskipITs=false` separately.
+
 ## Frontend image (multi-stage Dockerfile — output: `de.halbmann/sam-ui:latest`)
 
 ```bash
