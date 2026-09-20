@@ -76,9 +76,10 @@ services:
       KC_HEALTH_ENABLED: "true"
       # Public base URL Keycloak stamps into issuer/token/login-page links —
       # must equal the sam-ui TLS origin (nginx proxies /realms|/resources|/js
-      # to this service) so browser calls stay same-origin-HTTPS. Keep this
-      # host:port in sync with OIDC_ISSUER_URL in .env.
-      KC_HOSTNAME: https://192.168.101.103:8443
+      # to this service) so browser calls stay same-origin-HTTPS. Deployment-
+      # specific (LAN IP or domain), so it comes from .env, not hardcoded here
+      # — keep it in sync with OIDC_ISSUER_URL there (same host:port).
+      KC_HOSTNAME: ${KC_HOSTNAME_URL:?KC_HOSTNAME_URL is required, e.g. https://<your LAN IP>:8443}
       # Without this, jwks_uri/token_endpoint in the discovery document also
       # use the fixed KC_HOSTNAME above — sam-server would then have to fetch
       # them over HTTPS and fail (self-signed cert, untrusted by the JVM).

@@ -18,6 +18,7 @@ previously recorded in the roadmap's open-questions table and plan notes.
 | [0008](adr-0008-assistant-ensemble-scoping.md) | AI assistant tools never receive authorization-relevant arguments | accepted |
 | [0009](adr-0009-version-controlled-prompts.md) | Prompts are version-controlled resources, not runtime config | accepted |
 | [0010](adr-0010-tls-proxy-for-embedded-keycloak.md) | TLS-terminating nginx proxy in front of an embedded Keycloak for LAN/testing stacks | accepted |
+| [0011](adr-0011-shared-reverse-proxy-pattern-for-future-apps.md) | Keep nginx; document its reverse-proxy pattern as the template for future co-located apps (DMS/CRM/NextCloud) | accepted |
 
 New decisions: add the next number, keep it short (context, decision,
 consequences — a screen or less), and link it from this table.

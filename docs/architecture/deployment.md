@@ -17,7 +17,7 @@ SAM ships as two Docker images:
 | `de.halbmann/sam:latest` | Jib (`./mvnw package -Dquarkus.container-image.build=true -pl server -am`), or `docker build -f Dockerfile.sam .` for a Docker-only build with no host Maven/JDK | Quarkus server JAR — REST API, Flyway, Hibernate, LangChain4j |
 | `de.halbmann/sam-ui:latest` | `docker build .` (multi-stage Dockerfile) | Built Angular SPA served by nginx |
 
-The nginx reverse proxy is the single public entry point (port 80). All Angular API calls use relative `/api/*` paths, which nginx forwards to the backend — no CORS configuration required.
+The nginx reverse proxy is the single public entry point (port 80). All Angular API calls use relative `/api/*` paths, which nginx forwards to the backend — no CORS configuration required. This nginx-fronts-a-backend-container shape is also the template for any future app co-located on the same host/stack (a DMS, a CRM, NextCloud) — see [ADR-0011](decisions/adr-0011-shared-reverse-proxy-pattern-for-future-apps.md) for why nginx (not Caddy) and what a new app would add.
 
 `sam-server` also listens on a separate, unpublished management port (`9000`, [ADR-0007](decisions/adr-0007-management-interface.md)) for `/q/*` ops endpoints (`/q/info` for version/build-id, `/q/metrics` for Prometheus) — kept off the main port so they don't fall under the public API's `@Authenticated` default. nginx proxies `/q/*` to it internally.
 
